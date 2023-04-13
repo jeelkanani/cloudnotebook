@@ -1,26 +1,73 @@
-pipeline{
+#!/usr/bin/env groovy
+
+pipeline {
     agent any
-    stages{
-       stage('Building image') {
-      steps{
-        script {
-          withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
-            sh "docker build -t ${USERNAME}/helthtracker  ."
-            sh "echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin"
-            sh "docker push ${USERNAME}/notebook"
+    stages {
+ 
+        stage('build') {
+
+            steps {
+                script{
+                    echo 'building the application'
+                    echo "Software version is ${NEW_VERSION}"
+                    //sh 'mvn build-helper:parse-version versions:set -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.nextMinorVersion}.\\\${parsedVersion.incrementalVersion}\\\${parsedVersion.qualifier?}'
+                    //sh 'mvn clean package'
+                    //def version = (readFile('pom.xml') =~ '<version>(.+)</version>')[0][2]
+                    //env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    sh "docker build -t jeelkanani41/exam:examimage ."
+                    sh "docker run -it -d -p 3000:3000 jeelkanani41/exam:examimage"
+
+                }
+            }
         }
-      }
+       
+        stage('deploy') {
+//            input{
+//                message "Select the environment to deploy"
+//                ok "done"
+//                parameters{
+//                    choice(name: 'Type', choices:['Dev','Test','Deploy'], description: '')
+//                }
+//
+//            }
+            steps {
+                script{echo 'deploying the application'
+                    withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
+                        sh "echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin"
+                        sh "docker push jeelkanani41/exam:examimage"
+                    }}
+
+            }
+        }
+//        stage('commit version update'){
+//            steps{
+//                script{
+//                    withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
+//                        sh 'git config --global user.email "jenkins@example.com"'
+//                        sh 'git config --global user.name "jenkins"'
+//
+//                        sh 'git status'
+//                        sh 'git branch'
+//                        sh 'git config --list'
+//
+//                        sh "git remote set-url origin https://${USERNAME}:${PASSWORD}@github.com/bhoomildayani182/springboot-jenkins.git"
+//                        sh 'git add .'
+//                        sh 'git commit -m "version change"'
+//                        sh 'git push origin HEAD:jenkins-jobs'
+//                    }
+//                }
+//            }
+//        }
     }
-       stage('Deploy Image') {
-      steps{
-         script {
-            withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
-            sh "docker run -d --name HelthTracker -p 3000:3000  ${USERNAME}/notebook"
-            sh "docker image prune -a -f"
+    post{
+        always{
+            echo 'Executing always...'
         }
+        success{
+            echo 'Executing success'
         }
-      }
+        failure{
+            echo 'Executing failure'
+        }
     }
-}
-}
 }

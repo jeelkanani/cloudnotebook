@@ -9,8 +9,8 @@ pipeline {
             steps {
                 script{
                     echo 'building the application'
-                    sh "docker build -t jeelkanani41/exam:examimage ."
-                    sh "docker run -it -d -p 3000:3000 jeelkanani41/exam:examimage"
+                    sh "docker build -t mohit1803/exam:examimage ."
+                    sh "docker run -it -d -p 3000:3000 mohit1803/exam:examimage"
 
                 }
             }
@@ -29,7 +29,7 @@ pipeline {
                 script{echo 'deploying the application'
                     withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
                         sh "echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin"
-                        sh "docker push jeelkanani41/exam:examimage"
+                        sh "docker push mohit1803/exam:examimage"
                     }}
 
             }
